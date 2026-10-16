@@ -20,29 +20,25 @@ jobs:
 
       - name: Собираем APK файл
         run: |
-          echo "--- ПОЛУЧЕННЫЕ ФАЙЛЫ ИЗ АРХИВА ---"
-          find ./my_project_files
-          echo "----------------------------------"
+          # Ищем корень проекта по главному файлу настроек
+          SETTINGS_FILE=$(find ./my_project_files -name "settings.gradle" -o -name "settings.gradle.kts" | head -n 1)
           
-          # Ищем главный файл Android-проекта
-          GRADLE_FILE=$(find ./my_project_files -name "build.gradle" -o -name "build.gradle.kts" | head -n 1)
-          
-          if [ -z "$GRADLE_FILE" ]; then
-            echo "❌ ОШИБКА: Файл build.gradle не найден! Проверьте, тот ли архив вы загрузили."
+          if [ -z "$SETTINGS_FILE" ]; then
+            echo "❌ ОШИБКА: Файл settings.gradle не найден! Проверьте структуру архива."
             exit 1
           fi
           
-          PROJECT_DIR=$(dirname "$GRADLE_FILE")
-          echo "Найдена папка проекта: $PROJECT_DIR"
+          PROJECT_DIR=$(dirname "$SETTINGS_FILE")
+          echo "Найдена корневая папка проекта: $PROJECT_DIR"
           cd "$PROJECT_DIR"
           
-          # Если файла gradlew нет, генерируем его с помощью системного gradle
+          # Генерируем gradlew в правильной корневой папке
           if [ ! -f "gradlew" ]; then
             echo "Файл gradlew отсутствует. Генерируем автоматически..."
             gradle wrapper
           fi
           
-          # Даем права на запуск и запускаем сборку
+          # Даем права и запускаем сборку
           chmod +x gradlew
           ./gradlew assembleDebug
 
